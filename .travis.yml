@@ -8,6 +8,6 @@ python:
 install:
   - pip install -e .[dev]
 script:
-  - pytest -v --cov mapchete test/
+  - pytest -v --cov meintile tests/
 after_success:
   - coveralls
