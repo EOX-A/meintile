@@ -1,8 +1,6 @@
 import json
 import os
 
-from meintile._scale_set import ScaleSetDefinition
-
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -12,16 +10,16 @@ def _load_json(wkss_json):
 
 
 # Lambert Azimuthal Equal Area ETRS89 for Europe
-EuropeanETRS89_LAEAQuad = ScaleSetDefinition(_load_json("EuropeanETRS89_LAEAQuad.json"))
+EuropeanETRS89_LAEAQuad = _load_json("EuropeanETRS89_LAEAQuad.json")
 
 # Google Maps Compatible for the World
-WebMercatorQuad = ScaleSetDefinition(_load_json("WebMercatorQuad.json"))
+WebMercatorQuad = _load_json("WebMercatorQuad.json")
 
 # CRS84 for the World
-WorldCRS84Quad = ScaleSetDefinition(_load_json("WorldCRS84Quad.json"))
+WorldCRS84Quad = _load_json("WorldCRS84Quad.json")
 
 # World Mercator WGS84 (ellipsoid)
-WorldMercatorWGS84Quad = ScaleSetDefinition(_load_json("WorldMercatorWGS84Quad.json"))
+WorldMercatorWGS84Quad = _load_json("WorldMercatorWGS84Quad.json")
 
 
 WKSS_BY_NAME = {
