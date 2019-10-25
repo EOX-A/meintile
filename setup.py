@@ -13,10 +13,14 @@ with open("meintile/__init__.py") as f:
 
 # get dependencies from requirements file
 def _parse_requirements(file):
-    return sorted(set(
-        line.partition("#")[0].strip()
-        for line in open(os.path.join(os.path.dirname(__file__), file))
-    ) - set(""))
+    return sorted(
+        set(
+            line.partition("#")[0].strip()
+            for line in open(os.path.join(os.path.dirname(__file__), file))
+        )
+        - set("")
+    )
+
 
 # use README.rst for project long_description
 with open("README.rst") as f:
@@ -34,6 +38,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=_parse_requirements("requirements.txt"),
+    extras_require={"dev": _parse_requirements("requirements.txt")},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -41,8 +46,8 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7"
+        "Programming Language :: Python :: 3.7",
     ],
     setup_requires=["pytest-runner"],
-    tests_require=["pytest"]
+    tests_require=["pytest"],
 )

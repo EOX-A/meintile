@@ -1,3 +1,4 @@
+coveralls
 black
 flake8
 pre-commit
