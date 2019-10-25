@@ -15,6 +15,10 @@ class TileMatrixSet:
     """
     A Tile Matrix Set close to the OGC specification.
 
+    Parameters
+    ----------
+
+
     Attributes
     ----------
     bounding_box : meintile.Bounds
@@ -27,11 +31,11 @@ class TileMatrixSet:
         Alias of self.supported_crs.
     wkss : dict
         Reference to a well-known scale set.
-    tile_matrix : dict
+    tile_matrix : list
         Describes a scale level and its tile matrix.
     """
 
-    def __init__(self, crs=None, bounds=None, tile_matrices={}, **kwargs):
+    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
         """Initialize a Tile Matrix Set."""
         self.bounds = Bounds(*bounds)
         self.bounding_box = self.bounds
@@ -76,9 +80,11 @@ class TilePyramid(TileMatrixSet):
     ----------
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
         """Initialize a Tile Pyramid."""
-        super().__init__(**kwargs)
+        all_kwargs = dict(crs=crs, bounds=bounds, tile_matrices=tile_matrices)
+        all_kwargs.update(**kwargs)
+        super().__init__(**all_kwargs)
 
     @classmethod
     def from_wkss(self, wkss):
@@ -99,6 +105,7 @@ class TilePyramid(TileMatrixSet):
         -------
         TilePyramid
         """
+        # TODO: check whether parameters meet tile pyramid restrictions
         return TilePyramid(**_get_wkss_mapping(wkss))
 
 
@@ -111,15 +118,14 @@ def _get_wkss_mapping(wkss):
         raise TypeError("invalid WKSS given")
     left, bottom = wkss_definition["boundingBox"]["lowerCorner"]
     right, top = wkss_definition["boundingBox"]["upperCorner"]
-    print(wkss_definition.keys())
     return dict(
         crs=get_crs(wkss_definition["supportedCRS"]),
         bounds=(left, bottom, right, top),
         init_wkss=wkss_definition,
-        tile_matrix={
-            int(ii["identifier"]): TileMatrix.from_wkss(ii)
+        tile_matrix=[
+            {int(ii["identifier"]): TileMatrix.from_wkss(ii)}
             for ii in wkss_definition["tileMatrix"]
-        },
+        ],
     )
 
     # """
