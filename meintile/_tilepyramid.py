@@ -2,12 +2,8 @@
 
 from collections import OrderedDict
 
-# from shapely.prepared import prep
-# import math
-# import warnings
-
-# from meintile._global import PRECISION
 from meintile._crs import get_crs
+from meintile.exceptions import InvalidTileMatrixIndex
 from meintile._tilematrix import TileMatrix
 from meintile._types import Bounds
 from meintile.wkss import get_wkss
@@ -83,7 +79,10 @@ class TileMatrixSet:
 
     def __getitem__(self, key):
         """Get containing TileMatrix by identifier."""
-        return self.tile_matrices[key]
+        try:
+            return self.tile_matrices[key]
+        except KeyError:
+            raise InvalidTileMatrixIndex("TileMatrix '{}' not found".format(key))
 
     def __len__(self):
         """Return number of containing TileMatrix objects."""
@@ -111,6 +110,55 @@ class TilePyramid(TileMatrixSet):
         all_kwargs.update(**kwargs)
         super().__init__(**all_kwargs)
         # TODO: check whether parameters meet tile pyramid restrictions
+
+    def tile(self, zoom=None, row=None, col=None):
+        """
+        Return Tile object of this TilePyramid.
+
+        Parameters
+        ----------
+        zoom : int
+            zoom level / TileMatrix identifier
+        row : int
+            TileMatrix row
+        col : int
+            TileMatrix column
+
+        Returns
+        -------
+        tile : meintile.Tile
+        """
+        return self[zoom].tile(row=row, col=col)
+
+    def matrix_width(self, zoom=None):
+        """
+        Return TileMatrix height (number of rows) at zoom level.
+
+        Parameters
+        ----------
+        zoom : int
+            zoom level / TileMatrix identifier
+
+        Returns
+        -------
+        matrix width : int
+        """
+        return self[zoom].matrix_width
+
+    def matrix_height(self, zoom=None):
+        """
+        Return TileMatrix height (number of rows) at zoom level.
+
+        Parameters
+        ----------
+        zoom : int
+            zoom level / TileMatrix identifier
+
+        Returns
+        -------
+        matrix height : int
+        """
+        return self[zoom].matrix_height
 
     @classmethod
     def from_wkss(self, wkss):

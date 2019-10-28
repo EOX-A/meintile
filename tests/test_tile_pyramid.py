@@ -1,4 +1,7 @@
-from meintile import TilePyramid, TileMatrixSet, TileMatrix
+import pytest
+
+from meintile import TilePyramid, TileMatrixSet, TileMatrix, Tile
+from meintile.exceptions import InvalidTileIndex, InvalidTileMatrixIndex
 
 
 def test_from_wkss():
@@ -43,3 +46,23 @@ def test_get():
     for i in range(len(tp)):
         tile_matrix = tp[i]
         assert isinstance(tile_matrix, TileMatrix)
+
+
+def test_methods():
+    tp = TilePyramid.from_wkss("WebMercatorQuad")
+
+    # Tile construction
+    assert isinstance(tp.tile(0, 0, 0), Tile)
+    with pytest.raises(InvalidTileMatrixIndex):
+        tp.tile(None, 0, 0)
+    with pytest.raises(InvalidTileIndex):
+        tp.tile(0, None, 0)
+    with pytest.raises(InvalidTileIndex):
+        tp.tile(0, 0, None)
+    with pytest.raises(InvalidTileIndex):
+        tp.tile(0, 1, 0)
+    with pytest.raises(InvalidTileIndex):
+        tp.tile(0, 0, 1)
+
+    assert tp.matrix_width(0) == 1
+    assert tp.matrix_height(0) == 1
