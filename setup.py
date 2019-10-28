@@ -38,7 +38,10 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=_parse_requirements("requirements.txt"),
-    extras_require={"dev": _parse_requirements("requirements-dev.txt")},
+    extras_require={
+        "dev": _parse_requirements("requirements-dev.txt"),
+        "test": _parse_requirements("requirements-test.txt"),
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
