@@ -1,5 +1,7 @@
 """TilePyramid class."""
 
+from collections import OrderedDict
+
 # from shapely.prepared import prep
 # import math
 # import warnings
@@ -31,17 +33,20 @@ class TileMatrixSet:
         Alias of self.supported_crs.
     wkss : dict
         Reference to a well-known scale set.
-    tile_matrix : list
-        Describes a scale level and its tile matrix.
+    tile_matrices : list
+        List of parameters of multiple Tile Matrices.
     """
 
-    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
+    def __init__(self, crs=None, bounds=None, tile_matrices={}, **kwargs):
         """Initialize a Tile Matrix Set."""
         self.bounds = Bounds(*bounds)
         self.bounding_box = self.bounds
         self.crs = get_crs(crs)
         self.supported_crs = self.crs
         self._wkss = kwargs.get("init_wkss")
+        self.tile_matrices = OrderedDict(
+            [(int(i["identifier"]), TileMatrix.from_wkss(i)) for i in tile_matrices]
+        )
 
     @classmethod
     def from_wkss(self, wkss):
@@ -64,6 +69,26 @@ class TileMatrixSet:
         """
         return TileMatrixSet(**_get_wkss_mapping(wkss))
 
+    def items(self):
+        """Return a list of tuples with TileMatrix IDs and TileMatrix objects."""
+        return self.tile_matrices.items()
+
+    def keys(self):
+        """Return TileMatrix identifiers."""
+        return self.tile_matrices.keys()
+
+    def values(self):
+        """Return TileMatrix objects."""
+        return self.tile_matrices.values()
+
+    def __getitem__(self, key):
+        """Get containing TileMatrix by identifier."""
+        return self.tile_matrices[key]
+
+    def __len__(self):
+        """Return number of containing TileMatrix objects."""
+        return len(self.tile_matrices)
+
 
 class TilePyramid(TileMatrixSet):
     """
@@ -85,6 +110,7 @@ class TilePyramid(TileMatrixSet):
         all_kwargs = dict(crs=crs, bounds=bounds, tile_matrices=tile_matrices)
         all_kwargs.update(**kwargs)
         super().__init__(**all_kwargs)
+        # TODO: check whether parameters meet tile pyramid restrictions
 
     @classmethod
     def from_wkss(self, wkss):
@@ -105,7 +131,6 @@ class TilePyramid(TileMatrixSet):
         -------
         TilePyramid
         """
-        # TODO: check whether parameters meet tile pyramid restrictions
         return TilePyramid(**_get_wkss_mapping(wkss))
 
 
@@ -122,10 +147,7 @@ def _get_wkss_mapping(wkss):
         crs=get_crs(wkss_definition["supportedCRS"]),
         bounds=(left, bottom, right, top),
         init_wkss=wkss_definition,
-        tile_matrix=[
-            {int(ii["identifier"]): TileMatrix.from_wkss(ii)}
-            for ii in wkss_definition["tileMatrix"]
-        ],
+        tile_matrices=wkss_definition["tileMatrix"],
     )
 
     # """
