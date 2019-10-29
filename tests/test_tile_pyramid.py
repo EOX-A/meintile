@@ -66,3 +66,9 @@ def test_methods():
 
     assert tp.matrix_width(0) == 1
     assert tp.matrix_height(0) == 1
+
+
+def test_pixel_sizes(web_mercator_pixel_sizes):
+    tp = TilePyramid.from_wkss("WebMercatorQuad")
+    for i in range(len(tp)):
+        assert round(tp.pixel_x_size(i), 9) == round(web_mercator_pixel_sizes[i], 9)

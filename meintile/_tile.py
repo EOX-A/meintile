@@ -13,8 +13,7 @@ class Tile(object):
     """
 
     def __init__(self, tile_matrix=None, row=None, col=None):
-        self.tile_matrix, self.tm = tile_matrix, tile_matrix
-        self.tile_pyramid, self.tp = self.tm.tp, self.tm.tp
+        self.tile_matrix = self.tm = tile_matrix
         self.zoom = self.tm.id
         # assert Tile is valid
         if not isinstance(row, int):
