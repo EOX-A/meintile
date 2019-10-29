@@ -1,3 +1,5 @@
+import math
+
 from meintile._global import PRECISION, SCALE_MULTIPLIER
 from meintile._tile import Tile
 
@@ -33,10 +35,14 @@ class TileMatrix:
         # ellipsoid).
         if self.crs.linear_units == "metre":
             meters_per_unit = 1.0
+        elif "EPSG:4326" in self.crs.to_string():
+            meters_per_unit = 2 * math.pi * 6378137 / 360.0
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "non-metric CRSes apart from CRS84 are not yet supported"
+            )
         self.pixel_x_size = round(
-            self.scale_denominator * 10 ** -3 * (SCALE_MULTIPLIER / meters_per_unit),
+            self.scale_denominator * 10 ** -3 * SCALE_MULTIPLIER / meters_per_unit,
             PRECISION,
         )
         self.pixel_y_size = -self.pixel_x_size
