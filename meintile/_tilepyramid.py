@@ -42,7 +42,10 @@ class TileMatrixSet:
         self._wkss = kwargs.get("init_wkss")
         self.tile_matrices = OrderedDict(
             [
-                (int(i["identifier"]), TileMatrix(**i, crs=self.crs))
+                (
+                    int(i["identifier"]),
+                    TileMatrix(**i, crs=self.crs, bounds=self.bounds),
+                )
                 for i in tile_matrices
             ]
         )
