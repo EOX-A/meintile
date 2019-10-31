@@ -33,9 +33,7 @@ class Tile(object):
             raise InvalidTileIndex("col must be an integer, not {}".format(col))
         if col >= self.tile_matrix.height:
             raise InvalidTileIndex(
-                "Tile col ({}) exceeds matrix height ({})".format(
-                    col, self.tile_matrix.height
-                )
+                "Tile col ({}) exceeds matrix height ({})".format(col, self.tm.height)
             )
         # get Tile index values
         self.zoom = self.tm.id
@@ -184,7 +182,7 @@ class Tile(object):
     def __eq__(self, other):
         return (
             isinstance(other, self.__class__)
-            and self.tp == other.tp
+            and self.tm == other.tm
             and self.id == other.id
         )
 

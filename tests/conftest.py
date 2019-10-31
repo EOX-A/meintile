@@ -33,6 +33,11 @@ def web_mercator_pixel_sizes():
 
 
 @pytest.fixture
+def web_mercator_bounds():
+    return (-20037508.3427892, -20037508.3427892, 20037508.3427892, 20037508.3427892)
+
+
+@pytest.fixture
 def crs84_pixel_sizes():
     return [
         0.703125,
@@ -54,3 +59,8 @@ def crs84_pixel_sizes():
         1.07288360595703 * 10 ** -5,
         5.36441802978516 * 10 ** -6,
     ]
+
+
+@pytest.fixture
+def crs84_bounds():
+    return (-180.0, -90.0, 180.0, 90.0)

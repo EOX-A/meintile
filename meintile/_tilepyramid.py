@@ -50,73 +50,6 @@ class TileMatrixSet:
             ]
         )
 
-    @classmethod
-    def from_wkss(self, wkss):
-        """
-        Construct a Tile Matrix Set using a predefined well-known scale set.
-
-        Parameters
-        ----------
-        wkss : str or dict
-            Either a WKSS identifier or a WKSS dictionary.
-            Currently available scale sets:
-                - EuropeanETRS89_LAEAQuad: Lambert Azimuthal Equal Area ETRS89 for Europe
-                - WebMercatorQuad: Google Maps Compatible for the World
-                - WorldCRS84Quad: CRS84 for the World
-                - WorldMercatorWGS84Quad: World Mercator WGS84 (ellipsoid)
-
-        Returns
-        -------
-        TileMatrixSet
-        """
-        return TileMatrixSet(**_get_wkss_mapping(wkss))
-
-    def items(self):
-        """Return a list of tuples with TileMatrix IDs and TileMatrix objects."""
-        return self.tile_matrices.items()
-
-    def keys(self):
-        """Return TileMatrix identifiers."""
-        return self.tile_matrices.keys()
-
-    def values(self):
-        """Return TileMatrix objects."""
-        return self.tile_matrices.values()
-
-    def __getitem__(self, key):
-        """Get containing TileMatrix by identifier."""
-        try:
-            return self.tile_matrices[key]
-        except KeyError:
-            raise InvalidTileMatrixIndex("TileMatrix '{}' not found".format(key))
-
-    def __len__(self):
-        """Return number of containing TileMatrix objects."""
-        return len(self.tile_matrices)
-
-
-class TilePyramid(TileMatrixSet):
-    """
-    A Tile Pyramid is a subset of a Tile Matrix Set.
-
-    Tile Matrix Sets consist of Tile Matrices with arbitrary properties. In a Tile Pyramid
-    the Tile Matrices are ordered, and their shape and pixel sizes increase by a factor
-    of 2. Tile Pyramids resemble the image pyramid structure used by many image formats.
-
-    Parameters
-    ----------
-
-    Attributes
-    ----------
-    """
-
-    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
-        """Initialize a Tile Pyramid."""
-        all_kwargs = dict(crs=crs, bounds=bounds, tile_matrices=tile_matrices)
-        all_kwargs.update(**kwargs)
-        super().__init__(**all_kwargs)
-        # TODO: check whether parameters meet tile pyramid restrictions
-
     def tile(self, zoom=None, row=None, col=None):
         """
         Return Tile object of this TilePyramid.
@@ -195,6 +128,77 @@ class TilePyramid(TileMatrixSet):
         pixel_y_size : float
         """
         return self[zoom].pixel_y_size
+
+    @classmethod
+    def from_wkss(self, wkss):
+        """
+        Construct a Tile Matrix Set using a predefined well-known scale set.
+
+        Parameters
+        ----------
+        wkss : str or dict
+            Either a WKSS identifier or a WKSS dictionary.
+            Currently available scale sets:
+                - EuropeanETRS89_LAEAQuad: Lambert Azimuthal Equal Area ETRS89 for Europe
+                - WebMercatorQuad: Google Maps Compatible for the World
+                - WorldCRS84Quad: CRS84 for the World
+                - WorldMercatorWGS84Quad: World Mercator WGS84 (ellipsoid)
+
+        Returns
+        -------
+        TileMatrixSet
+        """
+        return TileMatrixSet(**_get_wkss_mapping(wkss))
+
+    def items(self):
+        """Return a list of tuples with TileMatrix IDs and TileMatrix objects."""
+        return self.tile_matrices.items()
+
+    def keys(self):
+        """Return TileMatrix identifiers."""
+        return self.tile_matrices.keys()
+
+    def values(self):
+        """Return TileMatrix objects."""
+        return self.tile_matrices.values()
+
+    def __getitem__(self, key):
+        """Get containing TileMatrix by identifier."""
+        try:
+            return self.tile_matrices[key]
+        except KeyError:
+            raise InvalidTileMatrixIndex("TileMatrix '{}' not found".format(key))
+
+    def __iter__(self):
+        """Return iterator over containing Tile Matrix objects."""
+        return iter(self.values())
+
+    def __len__(self):
+        """Return number of containing TileMatrix objects."""
+        return len(self.tile_matrices)
+
+
+class TilePyramid(TileMatrixSet):
+    """
+    A Tile Pyramid is a subset of a Tile Matrix Set.
+
+    Tile Matrix Sets consist of Tile Matrices with arbitrary properties. In a Tile Pyramid
+    the Tile Matrices are ordered, and their shape and pixel sizes increase by a factor
+    of 2. Tile Pyramids resemble the image pyramid structure used by many image formats.
+
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+    """
+
+    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
+        """Initialize a Tile Pyramid."""
+        all_kwargs = dict(crs=crs, bounds=bounds, tile_matrices=tile_matrices)
+        all_kwargs.update(**kwargs)
+        super().__init__(**all_kwargs)
+        # TODO: check whether parameters meet tile pyramid restrictions
 
     @classmethod
     def from_wkss(self, wkss):

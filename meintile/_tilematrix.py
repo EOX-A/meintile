@@ -48,16 +48,12 @@ class TileMatrix:
 
         # calculate matrix bounds
         top, left = self.top_left_corner
+        tile_x_size = self.pixel_x_size * self.tile_width
+        tile_y_size = self.pixel_y_size * self.tile_height
         self.matrix_bounds = Bounds(
             left=round(left, PRECISION),
-            bottom=round(
-                top + self.pixel_y_size * self.tile_height * self.matrix_height,
-                PRECISION,
-            ),
-            right=round(
-                left + self.pixel_x_size * self.tile_width * self.matrix_width,
-                PRECISION,
-            ),
+            bottom=round(top + tile_y_size * self.matrix_height, PRECISION),
+            right=round(left + tile_x_size * self.matrix_width, PRECISION),
             top=round(top, PRECISION),
         )
         self.left, self.bottom, self.right, self.top = self.matrix_bounds
@@ -79,3 +75,7 @@ class TileMatrix:
         tile : meintile.Tile
         """
         return Tile(tile_matrix=self, row=row, col=col)
+
+    def __repr__(self):
+        """Return representational string."""
+        return "TileMatrix(id={}, crs={})".format(self.id, self.crs.to_string())
