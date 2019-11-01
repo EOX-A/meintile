@@ -15,25 +15,78 @@ class Tile(object):
 
     Some tile functions can accept a tile buffer in pixels (pixelbuffer). A
     pixelbuffer value of e.g. 1 will extend the tile boundaries by 1 pixel.
+
+    Attributes
+    ----------
+    tile_matrix, tm : meintile.TileMatrix
+        Parent Tile Matrix.
+    zoom : int
+        Zoom level / parent Tile Matrix identifier.
+    row : int
+        Row within parent Tile Matrix.
+    col : int
+        Column within Tile Matrix.
+    index, id : meintile.TileIndex
+        Unique tile index.
+    pixel_x_size : float
+        Pixel size alongside x axis.
+    pixel_y_size : float
+        Pixel size alongside y axis.
+    bounds : meintile.Bounds
+        Bounding coordinates of tile
+    bbox : shapely.geometry.Polygon
+        Polygon geometry of tile.
+    left : float
+        Left coordinate of tile.
+    bottom : float
+        Bottom coordinate of tile.
+    right : float
+        Right coordinate of tile.
+    top : float
+        Top coordinate of tile.
+    x_size : float
+        Tile width in CRS units.
+    y_size : float
+        Tile height in CRS units.
+    shape : meintile.Shape
+        Tile shape in pixels.
+    height : int
+        Tile height in pixels.
+    width : int
+        Tile width in pixels.
+    affine : affine.Affine
+        Affine object to locate tile using rasterio.
     """
 
     def __init__(self, tile_matrix=None, row=None, col=None):
+        """
+        Initialize a Tile object.
+
+        Parameters
+        ----------
+        tile_matrix : meintile.TileMatrix
+            Parent Tile Matrix.
+        row : int
+            Row within parent Tile Matrix.
+        col : int
+            Column within Tile Matrix.
+        """
         self.tile_matrix = self.tm = tile_matrix
 
         # assert Tile is valid
         if not isinstance(row, int):
             raise InvalidTileIndex("row must be an integer, not {}".format(row))
-        if row >= self.tile_matrix.width:
+        if row >= self.tile_matrix.height:
             raise InvalidTileIndex(
-                "Tile row ({}) exceeds matrix width ({})".format(
-                    row, self.tile_matrix.width
+                "Tile row ({}) exceeds matrix height ({})".format(
+                    row, self.tile_matrix.height
                 )
             )
         if not isinstance(col, int):
             raise InvalidTileIndex("col must be an integer, not {}".format(col))
-        if col >= self.tile_matrix.height:
+        if col >= self.tile_matrix.width:
             raise InvalidTileIndex(
-                "Tile col ({}) exceeds matrix height ({})".format(col, self.tm.height)
+                "Tile col ({}) exceeds matrix width ({})".format(col, self.tm.width)
             )
         # get Tile index values
         self.zoom = self.tm.id
@@ -44,11 +97,11 @@ class Tile(object):
         # Tile properties in CRS units
         self.pixel_x_size = self.tm.pixel_x_size
         self.pixel_y_size = self.tm.pixel_y_size
-        tm_top, tm_left = self.tm.top_left_corner
+        tm_left, tm_top = self.tm.top_left_corner
         tile_x_size = self.pixel_x_size * self.tm.tile_width
         tile_y_size = self.pixel_y_size * self.tm.tile_height
         self.top = round(tm_top + (self.row * tile_y_size), PRECISION)
-        self.bottom = round(self.top - tile_x_size)
+        self.bottom = round(self.top - tile_x_size, PRECISION)
         self.left = round(tm_left + (self.col * tile_x_size), PRECISION)
         self.right = round(self.left + tile_x_size, PRECISION)
         self.bounds = Bounds(self.left, self.bottom, self.right, self.top)
@@ -67,14 +120,27 @@ class Tile(object):
         )
 
     def get_parent(self):
-        """Return tile from previous zoom level."""
+        """
+        Return tile from previous zoom level.
+
+        Returns
+        -------
+        parent : meintile.Tile or None
+            If no parent is available, None is returned.
+        """
         try:
             return self.tm.tp.tile(self.zoom - 1, self.row // 2, self.col // 2)
         except InvalidTileMatrixIndex:
             return None
 
     def get_children(self):
-        """Return tiles from next zoom level."""
+        """
+        Return tiles from next zoom level.
+
+        Returns
+        -------
+        children : list of meintile.Tile
+        """
         next_zoom = self.zoom + 1
         return [
             self.tm.tp.tile(
@@ -111,7 +177,14 @@ class Tile(object):
         | 7 | 3 | 6 |
         -------------
 
-        - connectedness: [4 or 8] return four direct neighbors or all eight.
+        Parameters
+        ----------
+        connectedness : int, (4 or 8)
+            Return the four direct neighbors or all eight.
+
+        Returns
+        -------
+        neighbors : list of meintile.Tile
         """
         if connectedness not in [4, 8]:
             raise ValueError("only connectedness values 8 or 4 are allowed")
@@ -159,43 +232,22 @@ class Tile(object):
 
         return unique_neighbors.values()
 
-    # def intersecting(self, tilepyramid):
-    #     """
-    #     Return all Tiles from intersecting TilePyramid.
-
-    #     This helps translating between TilePyramids with different metatiling
-    #     settings.
-
-    #     - tilepyramid: a TilePyramid object
-    #     """
-    #     return _tile_intersecting_tilepyramid(self, tilepyramid)
-
-    def is_on_edge(self):
-        """Determine whether tile touches or goes over pyramid edge."""
-        return (
-            self.left <= self.tm.tp.left
-            or self.bottom <= self.tm.tp.bottom  # touches_left
-            or self.right >= self.tm.tp.right  # touches_bottom
-            or self.top >= self.tm.tp.top  # touches_right  # touches_top
-        )
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__)
-            and self.tm == other.tm
-            and self.id == other.id
-        )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def __repr__(self):
-        return "Tile(%s, %s)" % (self.id, self.tp)
+        """Return representational string."""
+        return "Tile(%s, %s)" % (self.id, self.tm)
 
     def __hash__(self):
+        """Return unique hash."""
         return hash(repr(self))
 
     def __iter__(self):
+        """
+        Enable unpacking of tile index values.
+
+        Examples:
+        ---------
+        zoom, row, col = tile
+        """
         yield self.zoom
         yield self.row
         yield self.col

@@ -1,8 +1,8 @@
 """TilePyramid class."""
 
 from collections import OrderedDict
+from rasterio.crs import CRS
 
-from meintile._crs import get_crs
 from meintile.exceptions import InvalidTileMatrixIndex
 from meintile._tilematrix import TileMatrix
 from meintile._types import Bounds
@@ -11,42 +11,80 @@ from meintile.wkss import get_wkss
 
 class TileMatrixSet:
     """
-    A Tile Matrix Set close to the OGC specification.
-
-    Parameters
-    ----------
-
+    A Tile Matrix Set contains TileMatrix objects.
 
     Attributes
     ----------
-    bounding_box : meintile.Bounds
-        Minimum bounding rectangle surrounding the tile matrix set, in the supported CRS.
-    bounds : meintile.Bounds
-        Alias of self.bounding_box.
-    supported_crs : rasterio.crs.CRS
-        Reference to one coordinate reference system (CRS).
     crs : rasterio.crs.CRS
-        Alias of self.supported_crs.
-    wkss : dict
-        Reference to a well-known scale set.
-    tile_matrices : list
-        List of parameters of multiple Tile Matrices.
+        Coordinate reference system used by TileMatrixSet.
+    tile_matrices : OrderedDict
+        Keys are TileMatrix identifiers, values are TileMatrix objects.
+    well_known_scale_set : str
+        Reference to the well-known scale set used as base.
+    bounds : meintile.Bounds or None
+        Bounding box values if bounding_box parameter was provided.
     """
 
-    def __init__(self, crs=None, bounds=None, tile_matrices=None, **kwargs):
-        """Initialize a Tile Matrix Set."""
-        self.bounds = Bounds(*bounds)
-        self.bounding_box = self.bounds
-        self.crs = get_crs(crs)
-        self.supported_crs = self.crs
-        self._wkss = kwargs.get("init_wkss")
+    def __init__(
+        self,
+        crs=None,
+        tile_matrix_params=None,
+        well_known_scale_set=None,
+        title=None,
+        identifier=None,
+        bounding_box=None,
+        # **kwargs,
+    ):
+        """
+        Initialize a Tile Matrix Set.
+
+        Parameters
+        ----------
+        crs : str or rasterio.crs.CRS
+            CRS object or reference to one coordinate reference system. (e.g. an OGC URI)
+        tile_matrix_params : list of dicts
+            Describes a scale level and its tile matrix. See parameters required by
+            meintile.TileMatrix.
+        well_known_scale_set : str, optional
+            Reference to a well-known scale set.
+        title : str, optional
+            Title of this tile matrix set, normally used for display to a human.
+        identifier : str, optional
+            Tile matrix set identifier.
+        bounding_box : dict, optional
+            Minimum bounding rectangle surrounding the tile matrix set, in the supported
+            CRS. The dictionary requires the following entries: 'type' (must be
+            'BoundingBoxType'), 'crs' (reference to one coordinate reference system),
+            'lower_corner' (lower left corner coordinates) and 'upper_corner' (upper
+            right corner coordinates).
+        """
+        self.well_known_scale_set = well_known_scale_set
+        self._title = title
+        self._identifier = identifier
+        self._bounding_box = bounding_box
+        self._tile_matrix_params = tile_matrix_params
+
+        if self._bounding_box:
+            left, bottom = self._bounding_box["lower_corner"]
+            right, top = self._bounding_box["upper_corner"]
+            self.bounds = Bounds(left, bottom, right, top)
+        else:
+            self.bounds = None
+        self.crs = CRS.from_user_input(crs)
         self.tile_matrices = OrderedDict(
             [
                 (
                     int(i["identifier"]),
-                    TileMatrix(**i, crs=self.crs, bounds=self.bounds),
+                    TileMatrix(
+                        **dict(
+                            i,
+                            identifier=int(i["identifier"]),
+                            crs=self.crs,
+                            bounds=self.bounds,
+                        )
+                    ),
                 )
-                for i in tile_matrices
+                for i in tile_matrix_params
             ]
         )
 
@@ -82,7 +120,7 @@ class TileMatrixSet:
         -------
         matrix width : int
         """
-        return self[zoom].matrix_width
+        return self[zoom].width
 
     def matrix_height(self, zoom=None):
         """
@@ -97,7 +135,7 @@ class TileMatrixSet:
         -------
         matrix height : int
         """
-        return self[zoom].matrix_height
+        return self[zoom].height
 
     def pixel_x_size(self, zoom):
         """
@@ -186,18 +224,50 @@ class TilePyramid(TileMatrixSet):
     the Tile Matrices are ordered, and their shape and pixel sizes increase by a factor
     of 2. Tile Pyramids resemble the image pyramid structure used by many image formats.
 
-    Parameters
-    ----------
-
     Attributes
     ----------
+    crs : rasterio.crs.CRS
+        Coordinate reference system used by TileMatrixSet.
+    tile_matrices : OrderedDict
+        Keys are TileMatrix identifiers, values are TileMatrix objects.
+    well_known_scale_set : str
+        Reference to the well-known scale set used as base.
+    bounds : meintile.Bounds or None
+        Bounding box values if bounding_box parameter was provided.
+
     """
 
-    def __init__(self, crs=None, bounds=None, tile_matrices=[], **kwargs):
-        """Initialize a Tile Pyramid."""
-        all_kwargs = dict(crs=crs, bounds=bounds, tile_matrices=tile_matrices)
-        all_kwargs.update(**kwargs)
-        super().__init__(**all_kwargs)
+    def __init__(self, **kwargs):
+        """
+        Initialize a Tile Pyramid.
+
+        Parameters
+        ----------
+        crs : str or rasterio.crs.CRS
+            CRS object or reference to one coordinate reference system. (e.g. an OGC URI)
+        tile_matrix_params : list of dicts
+            Describes a scale level and its tile matrix. See parameters required by
+            meintile.TileMatrix.
+        well_known_scale_set : str, optional
+            Reference to a well-known scale set.
+        title : str, optional
+            Title of this tile matrix set, normally used for display to a human.
+        identifier : str, optional
+            Tile matrix set identifier.
+        bounding_box : dict, optional
+            Minimum bounding rectangle surrounding the tile matrix set, in the supported
+            CRS.
+            Dictionary keys:
+            type : str
+                Must be "BoundingBoxType".
+            crs : str
+                Reference to one coordinate reference system.
+            lower_corner : tuple or list
+                Lower left corner coordinates.
+            upper_corner : tuple or list
+                Upper right corner coordinates.
+        """
+        super().__init__(**kwargs)
         # TODO: check whether parameters meet tile pyramid restrictions
 
     @classmethod
@@ -223,19 +293,30 @@ class TilePyramid(TileMatrixSet):
 
 
 def _get_wkss_mapping(wkss):
+    # get definition by ID or use dictionary representation
     if isinstance(wkss, str):
         wkss_definition = get_wkss(wkss)
     elif isinstance(wkss, dict):
         wkss_definition = wkss
     else:
         raise TypeError("invalid WKSS given")
-    left, bottom = wkss_definition["boundingBox"]["lowerCorner"]
-    right, top = wkss_definition["boundingBox"]["upperCorner"]
+
+    # map to pythonic names
     return dict(
-        crs=get_crs(wkss_definition["supportedCRS"]),
-        bounds=(left, bottom, right, top),
-        init_wkss=wkss_definition,
-        tile_matrices=[
+        type=wkss_definition["type"],
+        title=wkss_definition.get("title"),
+        identifier=wkss_definition.get("identifier"),
+        bounding_box=dict(
+            type=wkss_definition["boundingBox"]["type"],
+            crs=wkss_definition["boundingBox"]["crs"],
+            lower_corner=wkss_definition["boundingBox"]["lowerCorner"],
+            upper_corner=wkss_definition["boundingBox"]["upperCorner"],
+        )
+        if "boundingBox" in wkss_definition
+        else None,
+        crs=wkss_definition["supportedCRS"],
+        well_known_scale_set=wkss_definition.get("wellKnownScaleSet"),
+        tile_matrix_params=[
             dict(
                 identifier=i["identifier"],
                 scale_denominator=i["scaleDenominator"],
