@@ -81,12 +81,14 @@ class TileMatrixSet:
                             identifier=int(i["identifier"]),
                             crs=self.crs,
                             bounds=self.bounds,
+                            tile_pyramid=self,
                         )
                     ),
                 )
                 for i in tile_matrix_params
             ]
         )
+        self.is_global = True
 
     def tile(self, zoom=None, row=None, col=None):
         """

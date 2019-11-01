@@ -64,6 +64,7 @@ class TileMatrix:
         matrix_width=None,
         matrix_height=None,
         bounds=None,
+        tile_pyramid=None,
     ):
         """
         Initialize a TileMatrix object.
@@ -94,6 +95,9 @@ class TileMatrix:
         bounds : tuple, optional
             Minimum bounding rectangle surrounding the tile matrix set, in the supported
             CRS.
+        tile_pyramid : meintile.TilePyramid, optional
+            Parent Tile Pyramid. This is required when using certain tile functions such
+            as get_parent() or get_children()
         """
         self.identifier = self.id = identifier
         self.crs = CRS.from_user_input(crs)
@@ -101,8 +105,8 @@ class TileMatrix:
         self.top_left_corner = top_left_corner
         self.tile_width = tile_width
         self.tile_height = tile_height
-        self.width = matrix_width
-        self.height = matrix_height
+        self.matrix_width = self.width = matrix_width
+        self.matrix_height = self.height = matrix_height
 
         # convert scale_denominator to pixel size
         if "EPSG:4326" in self.crs.to_string():
@@ -128,6 +132,7 @@ class TileMatrix:
         )
         self.left, self.bottom, self.right, self.top = self.matrix_bounds
         self.bounds = Bounds(*bounds) if bounds else self.matrix_bounds
+        self.tile_pyramid = self.tp = tile_pyramid
 
     def tile(self, row=None, col=None):
         """

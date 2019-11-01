@@ -18,6 +18,8 @@ class Tile(object):
 
     Attributes
     ----------
+    tile_pyramid, tp : meintile.TilePyramid
+        Parent Tile Pyramid of parent Tile Matrix.
     tile_matrix, tm : meintile.TileMatrix
         Parent Tile Matrix.
     zoom : int
@@ -72,6 +74,7 @@ class Tile(object):
             Column within Tile Matrix.
         """
         self.tile_matrix = self.tm = tile_matrix
+        self.tile_pyramid = self.tp = self.tile_matrix.tile_pyramid
 
         # assert Tile is valid
         if not isinstance(row, int):
