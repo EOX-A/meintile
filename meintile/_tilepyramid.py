@@ -33,7 +33,7 @@ class TileMatrixSet:
         title=None,
         identifier=None,
         bounding_box=None,
-        # **kwargs,
+        **kwargs
     ):
         """
         Initialize a Tile Matrix Set.
