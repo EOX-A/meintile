@@ -1,6 +1,7 @@
 import json
 import os
 
+from meintile._types import ScaleSet
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,10 +24,10 @@ WorldMercatorWGS84Quad = _load_json("WorldMercatorWGS84Quad.json")
 
 
 WKSS_BY_NAME = {
-    "EuropeanETRS89_LAEAQuad": EuropeanETRS89_LAEAQuad,
-    "WebMercatorQuad": WebMercatorQuad,
-    "WorldCRS84Quad": WorldCRS84Quad,
-    "WorldMercatorWGS84Quad": WorldMercatorWGS84Quad,
+    "EuropeanETRS89_LAEAQuad": ScaleSet(EuropeanETRS89_LAEAQuad, False),
+    "WebMercatorQuad": ScaleSet(WebMercatorQuad, True),
+    "WorldCRS84Quad": ScaleSet(WorldCRS84Quad, True),
+    "WorldMercatorWGS84Quad": ScaleSet(WorldMercatorWGS84Quad, True),
 }
 
 

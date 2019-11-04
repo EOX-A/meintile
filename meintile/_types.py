@@ -17,6 +17,19 @@ top : float
     Top coordinate.
 """
 
+ScaleSet = namedtuple("ScaleSet", "definition is_global")
+ScaleSet.__doc__ = """
+Standard-conform Scale Set plus meintile specific properties.
+
+Attributes
+==========
+definition : dict
+    Pythonized OGC Scale Set definition.
+is_global : bool
+    Indicates whether TileMatrixSet is to be interpreted as global coverage. This will
+    trigger Antimeridian wrapping.
+"""
+
 Shape = namedtuple("Shape", "height width")
 Shape.__doc__ = """
 Width and height in pixels.

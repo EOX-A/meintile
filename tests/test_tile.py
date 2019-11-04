@@ -100,14 +100,31 @@ def test_neighbors():
     # tile has exactly two identical neighbors
     tile = tp.tile(0, 0, 0)
     test_tile = [(0, 0, 1)]
-    neighbors = [t.id for t in tile.get_neighbors()]
+    neighbors = [t.id for t in tile.get_neighbors(connectedness=8)]
     assert test_tile == neighbors
 
     # tile is alone at current zoom level
     tp = TilePyramid.from_wkss("WebMercatorQuad")
     tile = tp.tile(0, 0, 0)
-    neighbors = [t.id for t in tile.get_neighbors()]
+    neighbors = [t.id for t in tile.get_neighbors(connectedness=8)]
     assert neighbors == []
+
+    # don't wrap over antimeridian on non-global scale set
+    tp = TilePyramid.from_wkss("EuropeanETRS89_LAEAQuad")
+    tile = tp.tile(3, 1, 0)
+    # 8 neighbors
+    test_neighbors = {(3, 0, 0), (3, 1, 1), (3, 2, 0), (3, 0, 1), (3, 2, 1)}
+    neighbors = {t.id for t in tile.get_neighbors(connectedness=8)}
+    assert test_neighbors == neighbors
+    # 4 neighbors
+    test_neighbors = {(3, 0, 0), (3, 1, 1), (3, 2, 0)}
+    neighbors = {t.id for t in tile.get_neighbors(connectedness=4)}
+    assert test_neighbors == neighbors
+    # other way round
+    tile = tp.tile(3, 1, 7)
+    test_neighbors = {(3, 0, 7), (3, 1, 6), (3, 2, 7), (3, 0, 6), (3, 2, 6)}
+    neighbors = {t.id for t in tile.get_neighbors(connectedness=8)}
+    assert test_neighbors == neighbors
 
 
 def test_magic_methods():

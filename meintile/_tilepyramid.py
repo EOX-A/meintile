@@ -29,6 +29,7 @@ class TileMatrixSet:
         self,
         crs=None,
         tile_matrix_params=None,
+        is_global=False,
         well_known_scale_set=None,
         title=None,
         identifier=None,
@@ -45,6 +46,10 @@ class TileMatrixSet:
         tile_matrix_params : list of dicts
             Describes a scale level and its tile matrix. See parameters required by
             meintile.TileMatrix.
+        is_global : bool
+            Indicates whether TileMatrixSet covers the globe. This helps meintile to
+            decide whether to wrap around the Antimeridian in the Tile.get_neighbors()
+            function.
         well_known_scale_set : str, optional
             Reference to a well-known scale set.
         title : str, optional
@@ -64,12 +69,11 @@ class TileMatrixSet:
         self._bounding_box = bounding_box
         self._tile_matrix_params = tile_matrix_params
 
+        self.bounds = None
         if self._bounding_box:
             left, bottom = self._bounding_box["lower_corner"]
             right, top = self._bounding_box["upper_corner"]
             self.bounds = Bounds(left, bottom, right, top)
-        else:
-            self.bounds = None
         self.crs = CRS.from_user_input(crs)
         self.tile_matrices = OrderedDict(
             [
@@ -88,7 +92,7 @@ class TileMatrixSet:
                 for i in tile_matrix_params
             ]
         )
-        self.is_global = True
+        self.is_global = is_global
 
     def tile(self, zoom=None, row=None, col=None):
         """
@@ -250,6 +254,10 @@ class TilePyramid(TileMatrixSet):
         tile_matrix_params : list of dicts
             Describes a scale level and its tile matrix. See parameters required by
             meintile.TileMatrix.
+        is_global : bool
+            Indicates whether TileMatrixSet covers the globe. This helps meintile to
+            decide whether to wrap around the Antimeridian in the Tile.get_neighbors()
+            function.
         well_known_scale_set : str, optional
             Reference to a well-known scale set.
         title : str, optional
@@ -297,9 +305,9 @@ class TilePyramid(TileMatrixSet):
 def _get_wkss_mapping(wkss):
     # get definition by ID or use dictionary representation
     if isinstance(wkss, str):
-        wkss_definition = get_wkss(wkss)
+        wkss_definition, is_global = get_wkss(wkss)
     elif isinstance(wkss, dict):
-        wkss_definition = wkss
+        wkss_definition, is_global = wkss, False
     else:
         raise TypeError("invalid WKSS given")
 
@@ -330,4 +338,5 @@ def _get_wkss_mapping(wkss):
             )
             for i in wkss_definition["tileMatrix"]
         ],
+        is_global=is_global,
     )

@@ -2,6 +2,7 @@ import pytest
 
 from meintile import TilePyramid, TileMatrixSet, TileMatrix, Tile
 from meintile.exceptions import InvalidTileIndex, InvalidTileMatrixIndex
+from meintile.wkss import get_wkss
 
 
 def test_from_wkss():
@@ -24,6 +25,13 @@ def test_from_wkss():
     ]:
         tms = TileMatrixSet.from_wkss(i)
         assert isinstance(tms, TileMatrixSet)
+
+    # use WKSS dictionary
+    tp = TilePyramid.from_wkss(get_wkss("WorldCRS84Quad").definition)
+
+    # rais error on invalid input
+    with pytest.raises(TypeError):
+        TilePyramid.from_wkss(None)
 
 
 def test_iter():
@@ -66,3 +74,8 @@ def test_methods():
 
     assert tp.matrix_width(0) == 1
     assert tp.matrix_height(0) == 1
+
+
+def test_attributes():
+    tp = TilePyramid.from_wkss("WebMercatorQuad")
+    assert tp.pixel_x_size(5) == -tp.pixel_y_size(5)
