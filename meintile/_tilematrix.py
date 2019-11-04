@@ -151,6 +151,25 @@ class TileMatrix:
         """
         return Tile(tile_matrix=self, row=row, col=col)
 
+    def to_dict(self):
+        """
+        Dump configuration ready to be encoded as JSON.
+
+        Returns
+        -------
+        dict
+        """
+        return dict(
+            type="TileMatrixType",
+            identifier=str(self.identifier),
+            scaleDenominator=self.scale_denominator,
+            topLeftCorner=self.top_left_corner,
+            tileWidth=self.tile_width,
+            tileHeight=self.tile_height,
+            matrixWidth=self.matrix_width,
+            matrixHeight=self.matrix_height,
+        )
+
     def __repr__(self):
         """Return representational string."""
         return "TileMatrix(id={}, crs={})".format(self.id, self.crs.to_string())

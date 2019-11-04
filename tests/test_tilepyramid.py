@@ -56,7 +56,7 @@ def test_get():
         assert isinstance(tile_matrix, TileMatrix)
 
 
-def test_methods():
+def test_tile():
     tp = TilePyramid.from_wkss("WebMercatorQuad")
 
     # Tile construction
@@ -79,3 +79,15 @@ def test_methods():
 def test_attributes():
     tp = TilePyramid.from_wkss("WebMercatorQuad")
     assert tp.pixel_x_size(5) == -tp.pixel_y_size(5)
+
+
+def test_dump_load():
+    tp = TilePyramid.from_wkss("WebMercatorQuad")
+    tp._abstract = "dummy abstract"
+    tp._keywords = ["one", "two"]
+    dumped = tp.to_dict()
+    assert isinstance(dumped, dict)
+    tp2 = TilePyramid.from_wkss(dumped)
+    assert tp._identifier == tp2._identifier
+    assert tp._abstract == tp2._abstract
+    assert tp._keywords == tp2._keywords

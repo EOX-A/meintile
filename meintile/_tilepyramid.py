@@ -19,8 +19,6 @@ class TileMatrixSet:
         Coordinate reference system used by TileMatrixSet.
     tile_matrices : OrderedDict
         Keys are TileMatrix identifiers, values are TileMatrix objects.
-    well_known_scale_set : str
-        Reference to the well-known scale set used as base.
     bounds : meintile.Bounds or None
         Bounding box values if bounding_box parameter was provided.
     """
@@ -30,9 +28,11 @@ class TileMatrixSet:
         crs=None,
         tile_matrix_params=None,
         is_global=False,
-        well_known_scale_set=None,
-        title=None,
         identifier=None,
+        title=None,
+        abstract=None,
+        keywords=None,
+        well_known_scale_set=None,
         bounding_box=None,
         **kwargs
     ):
@@ -50,12 +50,18 @@ class TileMatrixSet:
             Indicates whether TileMatrixSet covers the globe. This helps meintile to
             decide whether to wrap around the Antimeridian in the Tile.get_neighbors()
             function.
-        well_known_scale_set : str, optional
-            Reference to a well-known scale set.
-        title : str, optional
-            Title of this tile matrix set, normally used for display to a human.
         identifier : str, optional
             Tile matrix set identifier.
+        title : str, optional
+            Title of this tile matrix set, normally used for display to a human.
+        abstract : str, optional
+            Brief narrative description of this tile matrix set, normally available for
+            display to a human.
+        keywords : list
+            Unordered list of one or more commonly used or formalized word(s) or phrase(s)
+            used to describe this dataset.
+        well_known_scale_set : str, optional
+            Reference to a well-known scale set.
         bounding_box : dict, optional
             Minimum bounding rectangle surrounding the tile matrix set, in the supported
             CRS. The dictionary requires the following entries: 'type' (must be
@@ -63,9 +69,11 @@ class TileMatrixSet:
             'lower_corner' (lower left corner coordinates) and 'upper_corner' (upper
             right corner coordinates).
         """
-        self.well_known_scale_set = well_known_scale_set
-        self._title = title
+        self._well_known_scale_set = well_known_scale_set
         self._identifier = identifier
+        self._title = title
+        self._abstract = abstract
+        self._keywords = keywords
         self._bounding_box = bounding_box
         self._tile_matrix_params = tile_matrix_params
 
@@ -75,6 +83,7 @@ class TileMatrixSet:
             right, top = self._bounding_box["upper_corner"]
             self.bounds = Bounds(left, bottom, right, top)
         self.crs = CRS.from_user_input(crs)
+        self.crs_str = crs if isinstance(crs, str) else self.crs.to_string()
         self.tile_matrices = OrderedDict(
             [
                 (
@@ -194,6 +203,42 @@ class TileMatrixSet:
         """
         return TileMatrixSet(**_get_wkss_mapping(wkss))
 
+    def to_dict(self):
+        """
+        Dump configuration ready to be encoded as JSON.
+
+        Returns
+        -------
+        dict
+        """
+        # mandatory
+        conf = dict(
+            type="TileMatrixSetType",
+            identifier=self._identifier,
+            supportedCRS=self.crs_str,
+            tileMatrix=[tm.to_dict() for tm in self.tile_matrices.values()],
+        )
+        # optional
+        if self._title:
+            conf.update(title=self._title)
+        if self._abstract:
+            conf.update(abstract=self._abstract)
+        if self._keywords:
+            conf.update(keywords=self._keywords)
+        if self.bounds:
+            conf.update(
+                boundingBox=dict(
+                    type="BoundingBoxType",
+                    crs=self.crs_str,
+                    lowerCorner=[self.bounds.left, self.bounds.bottom],
+                    upperCorner=[self.bounds.right, self.bounds.top],
+                )
+            )
+        if self._well_known_scale_set:
+            conf.update(wellKnownScaleSet=self._well_known_scale_set)
+
+        return conf
+
     def items(self):
         """Return a list of tuples with TileMatrix IDs and TileMatrix objects."""
         return self.tile_matrices.items()
@@ -236,8 +281,6 @@ class TilePyramid(TileMatrixSet):
         Coordinate reference system used by TileMatrixSet.
     tile_matrices : OrderedDict
         Keys are TileMatrix identifiers, values are TileMatrix objects.
-    well_known_scale_set : str
-        Reference to the well-known scale set used as base.
     bounds : meintile.Bounds or None
         Bounding box values if bounding_box parameter was provided.
 
@@ -258,24 +301,24 @@ class TilePyramid(TileMatrixSet):
             Indicates whether TileMatrixSet covers the globe. This helps meintile to
             decide whether to wrap around the Antimeridian in the Tile.get_neighbors()
             function.
-        well_known_scale_set : str, optional
-            Reference to a well-known scale set.
-        title : str, optional
-            Title of this tile matrix set, normally used for display to a human.
         identifier : str, optional
             Tile matrix set identifier.
+        title : str, optional
+            Title of this tile matrix set, normally used for display to a human.
+        abstract : str, optional
+            Brief narrative description of this tile matrix set, normally available for
+            display to a human.
+        keywords : list
+            Unordered list of one or more commonly used or formalized word(s) or phrase(s)
+            used to describe this dataset.
+        well_known_scale_set : str, optional
+            Reference to a well-known scale set.
         bounding_box : dict, optional
             Minimum bounding rectangle surrounding the tile matrix set, in the supported
-            CRS.
-            Dictionary keys:
-            type : str
-                Must be "BoundingBoxType".
-            crs : str
-                Reference to one coordinate reference system.
-            lower_corner : tuple or list
-                Lower left corner coordinates.
-            upper_corner : tuple or list
-                Upper right corner coordinates.
+            CRS. The dictionary requires the following entries: 'type' (must be
+            'BoundingBoxType'), 'crs' (reference to one coordinate reference system),
+            'lower_corner' (lower left corner coordinates) and 'upper_corner' (upper
+            right corner coordinates).
         """
         super().__init__(**kwargs)
         # TODO: check whether parameters meet tile pyramid restrictions
@@ -316,6 +359,8 @@ def _get_wkss_mapping(wkss):
         type=wkss_definition["type"],
         title=wkss_definition.get("title"),
         identifier=wkss_definition.get("identifier"),
+        abstract=wkss_definition.get("abstract"),
+        keywords=wkss_definition.get("keywords"),
         bounding_box=dict(
             type=wkss_definition["boundingBox"]["type"],
             crs=wkss_definition["boundingBox"]["crs"],
