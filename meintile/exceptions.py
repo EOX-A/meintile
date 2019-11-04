@@ -1,6 +1,6 @@
+class InvalidTileMatrixIndex(KeyError):
+    """Raise when Tile Matrix is not available in TileMatrixSet."""
+
+
 class InvalidTileIndex(KeyError):
-    """Raise when tile index is not available in Tile Matrix."""
-
-
-class InvalidCRS(ValueError):
-    """Raise when no or invalid CRS is given."""
+    """Raise when Tile is not available in TileMatrix."""

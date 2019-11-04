@@ -38,12 +38,16 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=_parse_requirements("requirements.txt"),
-    extras_require={"dev": _parse_requirements("requirements-dev.txt")},
+    extras_require={
+        "dev": _parse_requirements("requirements-dev.txt"),
+        "test": _parse_requirements("requirements-test.txt"),
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: GIS",
         "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
